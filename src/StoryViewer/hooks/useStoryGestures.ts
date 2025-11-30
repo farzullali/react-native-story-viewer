@@ -71,7 +71,6 @@ export const useStoryGestures = ({
         if (shouldClose) {
           translateY.value = withTiming(SCREEN_HEIGHT, { duration: 250 }, () => {
             runOnJS(onClose)();
-            translateY.value = 0;
           });
         } else {
           // Bounce back

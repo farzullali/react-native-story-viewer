@@ -88,6 +88,9 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
     if (visible && currentStory) {
       reset();
       setIsPaused(false);
+      // Reset gesture position when modal opens
+      translateX.value = 0;
+      translateY.value = 0;
       onStoryView?.(currentUser.id, currentStory.id);
     } else {
       setIsPaused(true);
