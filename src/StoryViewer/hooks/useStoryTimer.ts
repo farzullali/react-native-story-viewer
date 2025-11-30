@@ -4,9 +4,10 @@ interface UseStoryTimerProps {
   duration: number;
   isPaused: boolean;
   onComplete: () => void;
+  key?: string | number; // Unique key to force timer restart
 }
 
-export const useStoryTimer = ({ duration, isPaused, onComplete }: UseStoryTimerProps) => {
+export const useStoryTimer = ({ duration, isPaused, onComplete, key }: UseStoryTimerProps) => {
   const [progress, setProgress] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -26,6 +27,10 @@ export const useStoryTimer = ({ duration, isPaused, onComplete }: UseStoryTimerP
   }, [clear]);
 
   useEffect(() => {
+    // Reset progress when key changes (new story)
+    setProgress(0);
+    elapsedRef.current = 0;
+
     if (isPaused) {
       if (intervalRef.current) {
         elapsedRef.current += Date.now() - startTimeRef.current;
@@ -36,11 +41,11 @@ export const useStoryTimer = ({ duration, isPaused, onComplete }: UseStoryTimerP
 
     // Start
     startTimeRef.current = Date.now();
-    
+
     intervalRef.current = setInterval(() => {
       const elapsed = elapsedRef.current + (Date.now() - startTimeRef.current);
       const newProgress = Math.min(elapsed / duration, 1);
-      
+
       setProgress(newProgress);
 
       if (newProgress >= 1) {
@@ -50,7 +55,7 @@ export const useStoryTimer = ({ duration, isPaused, onComplete }: UseStoryTimerP
     }, 16);
 
     return () => clear();
-  }, [isPaused, duration, onComplete, clear]);
+  }, [key, isPaused, duration, onComplete, clear]);
 
   return { progress, reset };
 };

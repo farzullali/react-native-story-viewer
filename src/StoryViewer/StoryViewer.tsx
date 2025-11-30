@@ -61,6 +61,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
     duration: currentStory?.duration || 5000,
     isPaused,
     onComplete: goToNextStory,
+    key: currentStory?.id, // Force timer restart when story changes
   });
 
   // Gesture logic
