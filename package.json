@@ -4,6 +4,10 @@
   "description": "A fully customizable Instagram-like story viewer component for React Native with gesture support, animations, and flexible rendering options",
   "main": "src/StoryViewer/index.tsx",
   "types": "src/StoryViewer/index.tsx",
+  "files": [
+    "src/StoryViewer",
+    "README.md"
+  ],
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
