@@ -29,6 +29,15 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
   visible,
   onClose,
   onStoryView,
+  renderHeader,
+  renderProgress,
+  renderContent,
+  renderFooter,
+  renderItem,
+  containerStyle,
+  progressContainerStyle,
+  headerContainerStyle,
+  footerContainerStyle,
 }) => {
   const [isPaused, setIsPaused] = useState(false);
 
@@ -101,24 +110,56 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
       const isCurrentUser = index === currentUserIndex;
       const story = user.stories[isCurrentUser ? currentStoryIndex : 0];
 
+      if (!story) return null;
+
+      const renderProps = {
+        user,
+        story,
+        currentStoryIndex: isCurrentUser ? currentStoryIndex : 0,
+        totalStories: user.stories.length,
+        progress: isCurrentUser ? progress : 0,
+        isCurrentUser,
+        onClose,
+        onNext: goToNextStory,
+        onPrev: goToPrevStory,
+        onPause: handlePressIn,
+        onResume: handlePressOut,
+      };
+
+      // If custom renderItem is provided, use it
+      if (renderItem) {
+        return renderItem({ ...renderProps, index });
+      }
+
+      // Default rendering
       return (
         <View style={styles.userPage}>
           {/* Progress bars */}
-          <View style={styles.progressContainer}>
-            <StoryProgress
-              totalStories={user.stories.length}
-              currentIndex={isCurrentUser ? currentStoryIndex : 0}
-              progress={isCurrentUser ? progress : 0}
-            />
+          <View style={[styles.progressContainer, progressContainerStyle]}>
+            {renderProgress ? (
+              renderProgress(renderProps)
+            ) : (
+              <StoryProgress
+                totalStories={user.stories.length}
+                currentIndex={isCurrentUser ? currentStoryIndex : 0}
+                progress={isCurrentUser ? progress : 0}
+              />
+            )}
           </View>
 
           {/* Header */}
-          <View style={styles.headerContainer}>
-            <StoryHeader user={user} onClose={onClose} />
+          <View style={[styles.headerContainer, headerContainerStyle]}>
+            {renderHeader ? (
+              renderHeader(renderProps)
+            ) : (
+              <StoryHeader user={user} onClose={onClose} />
+            )}
           </View>
 
           {/* Content */}
-          {story && (
+          {renderContent ? (
+            renderContent(renderProps)
+          ) : (
             <StoryContent
               story={story}
               onTapLeft={goToPrevStory}
@@ -126,6 +167,13 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
               onPressIn={handlePressIn}
               onPressOut={handlePressOut}
             />
+          )}
+
+          {/* Footer */}
+          {renderFooter && (
+            <View style={[styles.footerContainer, footerContainerStyle]}>
+              {renderFooter(renderProps)}
+            </View>
           )}
         </View>
       );
@@ -139,6 +187,14 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
       goToNextStory,
       handlePressIn,
       handlePressOut,
+      renderItem,
+      renderHeader,
+      renderProgress,
+      renderContent,
+      renderFooter,
+      progressContainerStyle,
+      headerContainerStyle,
+      footerContainerStyle,
     ],
   );
 
@@ -159,7 +215,9 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
       >
         <StatusBar barStyle="light-content" />
         <GestureDetector gesture={verticalPanGesture}>
-          <Animated.View style={[styles.container, animatedStyle]}>
+          <Animated.View
+            style={[styles.container, containerStyle, animatedStyle]}
+          >
             <FlatList
               ref={flatListRef}
               data={users}
@@ -207,6 +265,13 @@ const styles = StyleSheet.create({
   headerContainer: {
     position: 'absolute',
     top: 60,
+    left: 0,
+    right: 0,
+    zIndex: 2,
+  },
+  footerContainer: {
+    position: 'absolute',
+    bottom: 0,
     left: 0,
     right: 0,
     zIndex: 2,
