@@ -1,18 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { View, Modal, StyleSheet, StatusBar, Dimensions, FlatList } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  Dimensions,
+  FlatList,
+  Modal,
+  StatusBar,
+  StyleSheet,
+  View,
+} from 'react-native';
 import {
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
-import { StoryViewerProps, StoryUser } from './types';
-import { useStoryNavigation } from './hooks/useStoryNavigation';
-import { useStoryTimer } from './hooks/useStoryTimer';
-import { useStoryScroll } from './hooks/useStoryScroll';
-import { useVerticalCloseGesture } from './hooks/useVerticalCloseGesture';
-import { StoryProgress } from './components/StoryProgress';
-import { StoryHeader } from './components/StoryHeader';
 import { StoryContent } from './components/StoryContent';
+import { StoryHeader } from './components/StoryHeader';
+import { StoryProgress } from './components/StoryProgress';
+import { useStoryNavigation } from './hooks/useStoryNavigation';
+import { useStoryScroll } from './hooks/useStoryScroll';
+import { useStoryTimer } from './hooks/useStoryTimer';
+import { useVerticalCloseGesture } from './hooks/useVerticalCloseGesture';
+import { StoryUser, StoryViewerProps } from './types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -85,52 +92,70 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
   }, [currentStory?.id, visible]);
 
   // Pause/resume handlers for tap
-  const handlePressIn = () => setIsPaused(true);
-  const handlePressOut = () => setIsPaused(false);
+  const handlePressIn = useCallback(() => setIsPaused(true), []);
+  const handlePressOut = useCallback(() => setIsPaused(false), []);
+
+  // Render each user's story page
+  const renderUserStory = useCallback(
+    ({
+      item: user,
+      index,
+    }: {
+      item: StoryUser;
+      index: number;
+    }) => {
+      const isCurrentUser = index === currentUserIndex;
+      const story = user.stories[isCurrentUser ? currentStoryIndex : 0];
+
+      return (
+        <View style={styles.userPage}>
+          {/* Progress bars */}
+          <View style={styles.progressContainer}>
+            <StoryProgress
+              totalStories={user.stories.length}
+              currentIndex={isCurrentUser ? currentStoryIndex : 0}
+              progress={isCurrentUser ? progress : 0}
+            />
+          </View>
+
+          {/* Header */}
+          <View style={styles.headerContainer}>
+            <StoryHeader user={user} onClose={onClose} />
+          </View>
+
+          {/* Content */}
+          {story && (
+            <StoryContent
+              story={story}
+              onTapLeft={goToPrevStory}
+              onTapRight={goToNextStory}
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+            />
+          )}
+        </View>
+      );
+    },
+    [
+      currentUserIndex,
+      currentStoryIndex,
+      progress,
+      onClose,
+      goToPrevStory,
+      goToNextStory,
+      handlePressIn,
+      handlePressOut,
+    ]
+  );
 
   if (!visible || !currentUser || !currentStory) {
     return null;
   }
 
-  // Render each user's story page
-  const renderUserStory = ({ item: user, index }: { item: StoryUser; index: number }) => {
-    const isCurrentUser = index === currentUserIndex;
-    const story = user.stories[isCurrentUser ? currentStoryIndex : 0];
-
-    return (
-      <View style={styles.userPage}>
-        {/* Progress bars */}
-        <View style={styles.progressContainer}>
-          <StoryProgress
-            totalStories={user.stories.length}
-            currentIndex={isCurrentUser ? currentStoryIndex : 0}
-            progress={isCurrentUser ? progress : 0}
-          />
-        </View>
-
-        {/* Header */}
-        <View style={styles.headerContainer}>
-          <StoryHeader user={user} onClose={onClose} />
-        </View>
-
-        {/* Content */}
-        {story && (
-          <StoryContent
-            story={story}
-            onTapLeft={goToPrevStory}
-            onTapRight={goToNextStory}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-          />
-        )}
-      </View>
-    );
-  };
-
   return (
     <Modal
       visible={visible}
-      animationType="fade"
+      animationType="slide"
       onRequestClose={onClose}
       statusBarTranslucent
     >
@@ -142,7 +167,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
               ref={flatListRef}
               data={users}
               renderItem={renderUserStory}
-              keyExtractor={(item) => item.id}
+              keyExtractor={item => item.id}
               horizontal
               pagingEnabled
               showsHorizontalScrollIndicator={false}

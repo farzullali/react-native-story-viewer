@@ -13,7 +13,7 @@ interface StoryContentProps {
   onPressOut: () => void;
 }
 
-export const StoryContent: React.FC<StoryContentProps> = ({
+export const StoryContent: React.FC<StoryContentProps> = React.memo(({
   story,
   onTapLeft,
   onTapRight,
@@ -62,7 +62,7 @@ export const StoryContent: React.FC<StoryContentProps> = ({
       </View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {
