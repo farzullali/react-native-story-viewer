@@ -48,4 +48,7 @@ export interface StoryViewerProps {
   progressContainerStyle?: ViewStyle;
   headerContainerStyle?: ViewStyle;
   footerContainerStyle?: ViewStyle;
+
+  // Duration settings (in milliseconds)
+  defaultStoryDuration?: number; // Default duration for each story (default: 5000ms)
 }

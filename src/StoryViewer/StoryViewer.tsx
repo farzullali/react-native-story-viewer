@@ -38,6 +38,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
   progressContainerStyle,
   headerContainerStyle,
   footerContainerStyle,
+  defaultStoryDuration = 5000,
 }) => {
   const [isPaused, setIsPaused] = useState(false);
 
@@ -60,7 +61,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
 
   // Timer logic
   const { progress, reset } = useStoryTimer({
-    duration: currentStory?.duration || 5000,
+    duration: currentStory?.duration || defaultStoryDuration,
     isPaused,
     onComplete: goToNextStory,
     key: currentStory?.id,
@@ -205,14 +206,12 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="none"
       onRequestClose={onClose}
       statusBarTranslucent
-      style={{ backgroundColor: 'red' }}
+      transparent
     >
-      <GestureHandlerRootView
-        style={{ flex: 1, backgroundColor: 'transparent' }}
-      >
+      <GestureHandlerRootView style={{ flex: 1 }}>
         <StatusBar barStyle="light-content" />
         <GestureDetector gesture={verticalPanGesture}>
           <Animated.View
