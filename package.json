@@ -1,5 +1,5 @@
 {
-  "name": "react-native-story-viewer",
+  "name": "@farzullali/react-native-story-viewer",
   "version": "0.1.2",
   "description": "A fully customizable Instagram-like story viewer component for React Native with gesture support, animations, and flexible rendering options",
   "main": "src/StoryViewer/index.tsx",
