@@ -1,6 +1,10 @@
-import { useRef, useEffect } from 'react';
-import { FlatList, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import { Dimensions } from 'react-native';
+import { useEffect, useRef } from 'react';
+import {
+  Dimensions,
+  FlatList,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+} from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -29,8 +33,12 @@ export const useStoryScroll = ({
   };
 
   // Handle scroll end and update current user
-  const handleMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const newIndex = Math.round(event.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+  const handleMomentumScrollEnd = (
+    event: NativeSyntheticEvent<NativeScrollEvent>,
+  ) => {
+    const newIndex = Math.round(
+      event.nativeEvent.contentOffset.x / SCREEN_WIDTH,
+    );
     isScrollingRef.current = false;
 
     if (newIndex !== currentUserIndex) {
@@ -40,11 +48,14 @@ export const useStoryScroll = ({
   };
 
   // Handle initial scroll index failure
-  const handleScrollToIndexFailed = (info: { index: number; averageItemLength: number }) => {
+  const handleScrollToIndexFailed = (info: {
+    index: number;
+    averageItemLength: number;
+  }) => {
     setTimeout(() => {
       flatListRef.current?.scrollToIndex({
         index: info.index,
-        animated: false,
+        animated: true,
       });
     }, 100);
   };
@@ -56,7 +67,7 @@ export const useStoryScroll = ({
       const timer = setTimeout(() => {
         flatListRef.current?.scrollToIndex({
           index: currentUserIndex,
-          animated: false,
+          animated: true,
         });
       }, 50);
 

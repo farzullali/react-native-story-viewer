@@ -1,11 +1,12 @@
+import { useEffect } from 'react';
 import { Dimensions } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
 import {
   runOnJS,
+  useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
-  useAnimatedStyle,
 } from 'react-native-reanimated';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -24,12 +25,21 @@ export const useVerticalCloseGesture = ({
   onResume,
   visible,
 }: UseVerticalCloseGestureProps) => {
-  const translateY = useSharedValue(0);
+  const translateY = useSharedValue(SCREEN_HEIGHT);
+  const opacity = useSharedValue(0);
 
-  // Reset position when modal opens
-  if (visible && translateY.value !== 0) {
-    translateY.value = 0;
-  }
+  // Animate modal entrance/exit
+  useEffect(() => {
+    if (visible) {
+      // Entrance animation
+      translateY.value = withTiming(0, { duration: 300 });
+      opacity.value = withTiming(1, { duration: 300 });
+    } else {
+      // Exit animation
+      translateY.value = withTiming(SCREEN_HEIGHT, { duration: 250 });
+      opacity.value = withTiming(0, { duration: 250 });
+    }
+  }, [visible]);
 
   // Vertical pan gesture for closing (swipe down)
   const verticalPanGesture = Gesture.Pan()
@@ -37,7 +47,7 @@ export const useVerticalCloseGesture = ({
       'worklet';
       runOnJS(onPause)();
     })
-    .onUpdate((event) => {
+    .onUpdate(event => {
       'worklet';
       const { translationY } = event;
 
@@ -46,11 +56,12 @@ export const useVerticalCloseGesture = ({
         translateY.value = translationY;
       }
     })
-    .onEnd((event) => {
+    .onEnd(event => {
       'worklet';
       const { translationY, velocityY } = event;
 
-      const shouldClose = translationY > SWIPE_DOWN_THRESHOLD || velocityY > 500;
+      const shouldClose =
+        translationY > SWIPE_DOWN_THRESHOLD || velocityY > 500;
 
       if (shouldClose) {
         translateY.value = withTiming(SCREEN_HEIGHT, { duration: 250 }, () => {
@@ -64,14 +75,16 @@ export const useVerticalCloseGesture = ({
     .activeOffsetY([-15, 15]) // Activate only when vertical movement is significant
     .failOffsetX([-20, 20]); // Fail if horizontal movement is too large (let FlatList handle it)
 
-  // Animated styles for vertical gesture
+  // Animated styles for vertical gesture and modal
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
+    opacity: opacity.value,
   }));
 
   return {
     verticalPanGesture,
     animatedStyle,
     translateY,
+    opacity,
   };
 };

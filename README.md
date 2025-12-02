@@ -1,97 +1,505 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# React Native Story Viewer
 
-# Getting Started
+A fully customizable Instagram-like story viewer component for React Native with gesture support, animations, and flexible rendering options.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Features
 
-## Step 1: Start Metro
+- 📱 Instagram-style story viewer with swipe gestures
+- ⏸️ Tap and hold to pause stories
+- 🎨 Fully customizable components (header, progress, content, footer)
+- 🔄 Horizontal swipe between users
+- ⬇️ Vertical swipe to close
+- ⚡ Smooth animations with Reanimated 4
+- 🎯 TypeScript support
+- 📦 Zero external UI dependencies
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Requirements
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+| Package                      | Version  |
+| ---------------------------- | -------- |
+| React Native                 | >=0.70.0 |
+| React                        | >=18.0.0 |
+| react-native-gesture-handler | >=2.0.0  |
+| react-native-reanimated      | >=4.0.0  |
 
-```sh
+### Tested With
+
+- React Native: `0.82.1`
+- React: `19.1.1`
+- react-native-gesture-handler: `^2.29.1`
+- react-native-reanimated: `^4.1.5`
+- react-native-worklets: `0.6.1`
+
+### New Architecture
+
+This component is compatible with React Native's New Architecture but does not require it.
+
+## Installation
+
+```bash
 # Using npm
-npm start
+npm install react-native-gesture-handler react-native-reanimated
 
-# OR using Yarn
-yarn start
+# Using yarn
+yarn add react-native-gesture-handler react-native-reanimated
+
+# Using pnpm
+pnpm add react-native-gesture-handler react-native-reanimated
 ```
 
-## Step 2: Build and run your app
+### iOS Setup
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+```bash
+cd ios && pod install
 ```
 
-### iOS
+### Babel Configuration
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+Add Reanimated's babel plugin to your `babel.config.js`:
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
+```javascript
+module.exports = {
+  presets: ['module:@react-native/babel-preset'],
+  plugins: [
+    'react-native-worklets/plugin', // Must be last!
+  ],
+};
 ```
 
-Then, and every time you update your native dependencies, run:
+### Android Setup
 
-```sh
-bundle exec pod install
+Make sure gesture handler is properly set up in `MainActivity.java`:
+
+```java
+package com.yourapp;
+
+import com.facebook.react.ReactActivity;
+import com.facebook.react.ReactActivityDelegate;
+import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
+import com.facebook.react.defaults.DefaultReactActivityDelegate;
+import android.os.Bundle; // Add this
+import com.facebook.react.ReactRootView; // Add this
+
+public class MainActivity extends ReactActivity {
+
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(null); // Add this for gesture handler
+  }
+
+  // ... rest of your code
+}
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+## Basic Usage
 
-```sh
-# Using npm
-npm run ios
+```typescript
+import React, { useState } from 'react';
+import { View, Button } from 'react-native';
+import { StoryViewer } from './src/StoryViewer';
+import type { StoryUser } from './src/StoryViewer';
 
-# OR using Yarn
-yarn ios
+export default function App() {
+  const [visible, setVisible] = useState(false);
+
+  const users: StoryUser[] = [
+    {
+      id: '1',
+      name: 'John Doe',
+      avatar: 'https://example.com/avatar1.jpg',
+      stories: [
+        {
+          id: 's1',
+          type: 'image',
+          url: 'https://example.com/story1.jpg',
+          duration: 5000, // Optional: 5 seconds
+        },
+        {
+          id: 's2',
+          type: 'image',
+          url: 'https://example.com/story2.jpg',
+        },
+      ],
+    },
+    {
+      id: '2',
+      name: 'Jane Smith',
+      avatar: 'https://example.com/avatar2.jpg',
+      stories: [
+        {
+          id: 's3',
+          type: 'image',
+          url: 'https://example.com/story3.jpg',
+        },
+      ],
+    },
+  ];
+
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Button title="Show Stories" onPress={() => setVisible(true)} />
+
+      <StoryViewer
+        users={users}
+        visible={visible}
+        onClose={() => setVisible(false)}
+        onStoryView={(userId, storyId) => {
+          console.log(`Viewed story ${storyId} from user ${userId}`);
+        }}
+      />
+    </View>
+  );
+}
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+## Props
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+### StoryViewerProps
 
-## Step 3: Modify your app
+| Prop                     | Type                                                       | Required | Default | Description                       |
+| ------------------------ | ---------------------------------------------------------- | -------- | ------- | --------------------------------- |
+| `users`                  | `StoryUser[]`                                              | Yes      | -       | Array of users with their stories |
+| `visible`                | `boolean`                                                  | Yes      | -       | Controls modal visibility         |
+| `onClose`                | `() => void`                                               | Yes      | -       | Callback when viewer closes       |
+| `initialUserIndex`       | `number`                                                   | No       | `0`     | Index of user to start with       |
+| `onStoryView`            | `(userId: string, storyId: string) => void`                | No       | -       | Callback when a story is viewed   |
+| `defaultStoryDuration`   | `number`                                                   | No       | `5000`  | Default duration for stories (ms) |
+| `renderHeader`           | `(props: StoryRenderProps) => ReactNode`                   | No       | -       | Custom header component           |
+| `renderProgress`         | `(props: StoryRenderProps) => ReactNode`                   | No       | -       | Custom progress bar               |
+| `renderContent`          | `(props: StoryRenderProps) => ReactNode`                   | No       | -       | Custom story content              |
+| `renderFooter`           | `(props: StoryRenderProps) => ReactNode`                   | No       | -       | Custom footer component           |
+| `renderItem`             | `(props: StoryRenderProps & {index: number}) => ReactNode` | No       | -       | Complete custom rendering         |
+| `containerStyle`         | `ViewStyle`                                                | No       | -       | Style for main container          |
+| `progressContainerStyle` | `ViewStyle`                                                | No       | -       | Style for progress container      |
+| `headerContainerStyle`   | `ViewStyle`                                                | No       | -       | Style for header container        |
+| `footerContainerStyle`   | `ViewStyle`                                                | No       | -       | Style for footer container        |
+| `swipeAnimationConfig`   | `SwipeAnimationConfig`                                     | No       | -       | Custom swipe animation config     |
 
-Now that you have successfully run the app, let's make changes!
+### StoryUser Type
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+```typescript
+interface StoryUser {
+  id: string;
+  name: string;
+  avatar: string;
+  stories: Story[];
+}
+```
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+### Story Type
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+```typescript
+interface Story {
+  id: string;
+  type: 'image' | 'video'; // Video support coming soon
+  url: string;
+  duration?: number; // Duration in milliseconds
+}
+```
 
-## Congratulations! :tada:
+### StoryRenderProps Type
 
-You've successfully run and modified your React Native App. :partying_face:
+```typescript
+interface StoryRenderProps {
+  user: StoryUser;
+  story: Story;
+  currentStoryIndex: number;
+  totalStories: number;
+  progress: number; // 0 to 1
+  isCurrentUser: boolean;
+  onClose: () => void;
+  onNext: () => void;
+  onPrev: () => void;
+  onPause: () => void;
+  onResume: () => void;
+}
+```
 
-### Now what?
+### SwipeAnimationConfig Type
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+```typescript
+type SwipeAnimationType = 'default' | 'fade' | 'scale' | 'cube' | 'custom';
 
-# Troubleshooting
+interface SwipeAnimationConfig {
+  type?: SwipeAnimationType;
+  duration?: number; // Animation duration in milliseconds (default: 250)
+  customAnimation?: (
+    index: number,
+    scrollOffset: number,
+    itemWidth: number,
+  ) => {
+    opacity?: number;
+    transform?: Array<{ scale?: number; translateX?: number; rotateY?: string }>;
+  };
+}
+```
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+## Advanced Usage
 
-# Learn More
+### Custom Duration
 
-To learn more about React Native, take a look at the following resources:
+```typescript
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  defaultStoryDuration={3000} // 3 seconds per story
+/>
+```
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+### Custom Header
+
+```typescript
+import { Text, View, TouchableOpacity } from 'react-native';
+
+const CustomHeader = ({ user, onClose }) => (
+  <View style={{ flexDirection: 'row', padding: 16 }}>
+    <Text style={{ color: '#fff', fontSize: 18 }}>{user.name}</Text>
+    <TouchableOpacity onPress={onClose} style={{ marginLeft: 'auto' }}>
+      <Text style={{ color: '#fff', fontSize: 24 }}>×</Text>
+    </TouchableOpacity>
+  </View>
+);
+
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  renderHeader={CustomHeader}
+/>;
+```
+
+### Custom Progress Bar
+
+```typescript
+const CustomProgress = ({ totalStories, currentStoryIndex, progress }) => (
+  <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 16 }}>
+    {Array.from({ length: totalStories }).map((_, index) => (
+      <View
+        key={index}
+        style={{
+          flex: 1,
+          height: 3,
+          backgroundColor: 'rgba(255,255,255,0.3)',
+          borderRadius: 2,
+        }}
+      >
+        <View
+          style={{
+            width:
+              index < currentStoryIndex
+                ? '100%'
+                : index === currentStoryIndex
+                ? `${progress * 100}%`
+                : '0%',
+            height: '100%',
+            backgroundColor: '#fff',
+            borderRadius: 2,
+          }}
+        />
+      </View>
+    ))}
+  </View>
+);
+
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  renderProgress={CustomProgress}
+/>;
+```
+
+### Custom Footer
+
+```typescript
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  renderFooter={({ user, story }) => (
+    <View style={{ padding: 20, backgroundColor: 'rgba(0,0,0,0.5)' }}>
+      <Text style={{ color: '#fff' }}>Posted by {user.name}</Text>
+      <Text style={{ color: '#aaa', fontSize: 12 }}>2 hours ago</Text>
+    </View>
+  )}
+/>
+```
+
+### Complete Custom Rendering
+
+```typescript
+const CustomStoryItem = ({ user, story, onClose, onNext, onPrev, index }) => (
+  <View style={{ flex: 1, backgroundColor: '#1a1a1a' }}>
+    {/* Your completely custom layout */}
+    <Image source={{ uri: story.url }} style={{ flex: 1 }} />
+    <View style={{ padding: 20 }}>
+      <Text style={{ color: '#fff' }}>{user.name}</Text>
+    </View>
+  </View>
+);
+
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  renderItem={CustomStoryItem}
+/>;
+```
+
+### Custom Styles
+
+```typescript
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  containerStyle={{ backgroundColor: '#1a1a1a' }}
+  headerContainerStyle={{ top: 80 }}
+  progressContainerStyle={{ paddingHorizontal: 20 }}
+  footerContainerStyle={{ bottom: 40 }}
+/>
+```
+
+### Custom Swipe Animations
+
+The library provides built-in swipe animation types and supports custom animations when transitioning between users.
+
+#### Built-in Animation Types
+
+**Default (no animation)**
+```typescript
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  swipeAnimationConfig={{ type: 'default' }}
+/>
+```
+
+**Fade Animation**
+```typescript
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  swipeAnimationConfig={{
+    type: 'fade',
+    duration: 300,
+  }}
+/>
+```
+
+**Scale Animation**
+```typescript
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  swipeAnimationConfig={{
+    type: 'scale',
+    duration: 250,
+  }}
+/>
+```
+
+**Cube Animation** (3D flip effect)
+```typescript
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  swipeAnimationConfig={{
+    type: 'cube',
+    duration: 400,
+  }}
+/>
+```
+
+#### Custom Animation
+
+Create your own animation by providing a custom function. **Important:** The custom animation function must be a worklet (add `'worklet';` directive).
+
+```typescript
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  swipeAnimationConfig={{
+    type: 'custom',
+    customAnimation: (index, scrollOffset, itemWidth) => {
+      'worklet';
+      // Calculate the position relative to the current view
+      const position = scrollOffset - index * itemWidth;
+      const progress = position / itemWidth;
+
+      // Example: Combined fade and scale effect
+      const opacity = 1 - Math.abs(progress) * 0.8;
+      const scale = 1 - Math.abs(progress) * 0.3;
+
+      return {
+        opacity: Math.max(0.2, Math.min(1, opacity)),
+        transform: [{ scale: Math.max(0.7, Math.min(1, scale)) }],
+      };
+    },
+  }}
+/>
+```
+
+**Custom Animation with Rotation**
+```typescript
+swipeAnimationConfig={{
+  type: 'custom',
+  customAnimation: (index, scrollOffset, itemWidth) => {
+    'worklet';
+    const position = scrollOffset - index * itemWidth;
+    const progress = position / itemWidth;
+
+    return {
+      transform: [
+        { perspective: 1000 },
+        { rotateY: `${progress * 45}deg` },
+        { scale: 1 - Math.abs(progress) * 0.1 },
+      ],
+    };
+  },
+}}
+```
+
+## Gestures
+
+| Gesture          | Action                 |
+| ---------------- | ---------------------- |
+| Tap right side   | Next story             |
+| Tap left side    | Previous story         |
+| Hold anywhere    | Pause story            |
+| Swipe left/right | Navigate between users |
+| Swipe down       | Close viewer           |
+
+## Examples
+
+Check out the `src/StoryViewer/examples/` directory for more examples:
+
+- `CustomRenderExample.tsx` - Various customization examples
+
+## Troubleshooting
+
+### Stories not animating
+
+Make sure you've added the Reanimated babel plugin as the **last** plugin in your `babel.config.js`.
+
+### Gestures not working
+
+Ensure `react-native-gesture-handler` is properly installed and configured in your `MainActivity.java` (Android) and `AppDelegate.mm` (iOS).
+
+### TypeScript errors
+
+Make sure you're using TypeScript 4.0 or higher and have `@types/react` and `@types/react-native` installed.
+
+## License
+
+MIT
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request.

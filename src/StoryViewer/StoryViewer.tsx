@@ -1,18 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { View, Modal, StyleSheet, StatusBar, Dimensions, FlatList } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  Dimensions,
+  Modal,
+  StatusBar,
+  StyleSheet,
+  View,
+} from 'react-native';
 import {
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
-import Animated from 'react-native-reanimated';
-import { StoryViewerProps, StoryUser } from './types';
-import { useStoryNavigation } from './hooks/useStoryNavigation';
-import { useStoryTimer } from './hooks/useStoryTimer';
-import { useStoryScroll } from './hooks/useStoryScroll';
-import { useVerticalCloseGesture } from './hooks/useVerticalCloseGesture';
-import { StoryProgress } from './components/StoryProgress';
-import { StoryHeader } from './components/StoryHeader';
+import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
+import { AnimatedStoryItem } from './components/AnimatedStoryItem';
 import { StoryContent } from './components/StoryContent';
+import { StoryHeader } from './components/StoryHeader';
+import { StoryProgress } from './components/StoryProgress';
+import { useStoryNavigation } from './hooks/useStoryNavigation';
+import { useStoryScroll } from './hooks/useStoryScroll';
+import { useStoryTimer } from './hooks/useStoryTimer';
+import { useVerticalCloseGesture } from './hooks/useVerticalCloseGesture';
+import { StoryUser, StoryViewerProps } from './types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -22,8 +29,20 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
   visible,
   onClose,
   onStoryView,
+  renderHeader,
+  renderProgress,
+  renderContent,
+  renderFooter,
+  renderItem,
+  containerStyle,
+  progressContainerStyle,
+  headerContainerStyle,
+  footerContainerStyle,
+  defaultStoryDuration = 5000,
+  swipeAnimationConfig,
 }) => {
   const [isPaused, setIsPaused] = useState(false);
+  const scrollOffset = useSharedValue(0);
 
   // Navigation logic
   const {
@@ -44,7 +63,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
 
   // Timer logic
   const { progress, reset } = useStoryTimer({
-    duration: currentStory?.duration || 5000,
+    duration: currentStory?.duration || defaultStoryDuration,
     isPaused,
     onComplete: goToNextStory,
     key: currentStory?.id,
@@ -72,6 +91,13 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
     visible,
   });
 
+  // Animated scroll handler
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollOffset.value = event.contentOffset.x;
+    },
+  });
+
   // Reset timer and trigger view callback when story changes
   useEffect(() => {
     if (visible && currentStory) {
@@ -85,72 +111,148 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
   }, [currentStory?.id, visible]);
 
   // Pause/resume handlers for tap
-  const handlePressIn = () => setIsPaused(true);
-  const handlePressOut = () => setIsPaused(false);
+  const handlePressIn = useCallback(() => setIsPaused(true), []);
+  const handlePressOut = useCallback(() => setIsPaused(false), []);
+
+  // Render each user's story page
+  const renderUserStory = useCallback(
+    ({ item: user, index }: { item: StoryUser; index: number }) => {
+      const isCurrentUser = index === currentUserIndex;
+      const story = user.stories[isCurrentUser ? currentStoryIndex : 0];
+
+      if (!story) return null;
+
+      const renderProps = {
+        user,
+        story,
+        currentStoryIndex: isCurrentUser ? currentStoryIndex : 0,
+        totalStories: user.stories.length,
+        progress: isCurrentUser ? progress : 0,
+        isCurrentUser,
+        onClose,
+        onNext: goToNextStory,
+        onPrev: goToPrevStory,
+        onPause: handlePressIn,
+        onResume: handlePressOut,
+      };
+
+      const content = (
+        <>
+          {!renderItem && (
+            <>
+              {/* Progress bars */}
+              <View style={[styles.progressContainer, progressContainerStyle]}>
+                {renderProgress ? (
+                  renderProgress(renderProps)
+                ) : (
+                  <StoryProgress
+                    totalStories={user.stories.length}
+                    currentIndex={isCurrentUser ? currentStoryIndex : 0}
+                    progress={isCurrentUser ? progress : 0}
+                  />
+                )}
+              </View>
+
+              {/* Header */}
+              <View style={[styles.headerContainer, headerContainerStyle]}>
+                {renderHeader ? (
+                  renderHeader(renderProps)
+                ) : (
+                  <StoryHeader user={user} onClose={onClose} />
+                )}
+              </View>
+
+              {/* Content */}
+              {renderContent ? (
+                renderContent(renderProps)
+              ) : (
+                <StoryContent
+                  story={story}
+                  onTapLeft={goToPrevStory}
+                  onTapRight={goToNextStory}
+                  onPressIn={handlePressIn}
+                  onPressOut={handlePressOut}
+                />
+              )}
+
+              {/* Footer */}
+              {renderFooter && (
+                <View style={[styles.footerContainer, footerContainerStyle]}>
+                  {renderFooter(renderProps)}
+                </View>
+              )}
+            </>
+          )}
+          {renderItem && renderItem({ ...renderProps, index })}
+        </>
+      );
+
+      return (
+        <AnimatedStoryItem
+          index={index}
+          scrollOffset={scrollOffset}
+          animationConfig={swipeAnimationConfig}
+          width={SCREEN_WIDTH}
+        >
+          {content}
+        </AnimatedStoryItem>
+      );
+    },
+    [
+      currentUserIndex,
+      currentStoryIndex,
+      progress,
+      onClose,
+      goToPrevStory,
+      goToNextStory,
+      handlePressIn,
+      handlePressOut,
+      renderItem,
+      renderHeader,
+      renderProgress,
+      renderContent,
+      renderFooter,
+      progressContainerStyle,
+      headerContainerStyle,
+      footerContainerStyle,
+      swipeAnimationConfig,
+      scrollOffset,
+    ],
+  );
 
   if (!visible || !currentUser || !currentStory) {
     return null;
   }
 
-  // Render each user's story page
-  const renderUserStory = ({ item: user, index }: { item: StoryUser; index: number }) => {
-    const isCurrentUser = index === currentUserIndex;
-    const story = user.stories[isCurrentUser ? currentStoryIndex : 0];
-
-    return (
-      <View style={styles.userPage}>
-        {/* Progress bars */}
-        <View style={styles.progressContainer}>
-          <StoryProgress
-            totalStories={user.stories.length}
-            currentIndex={isCurrentUser ? currentStoryIndex : 0}
-            progress={isCurrentUser ? progress : 0}
-          />
-        </View>
-
-        {/* Header */}
-        <View style={styles.headerContainer}>
-          <StoryHeader user={user} onClose={onClose} />
-        </View>
-
-        {/* Content */}
-        {story && (
-          <StoryContent
-            story={story}
-            onTapLeft={goToPrevStory}
-            onTapRight={goToNextStory}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-          />
-        )}
-      </View>
-    );
-  };
-
   return (
     <Modal
       visible={visible}
-      animationType="fade"
+      animationType="none"
       onRequestClose={onClose}
       statusBarTranslucent
+      transparent
     >
-      <GestureHandlerRootView style={{ flex: 1, backgroundColor: 'black' }}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
         <StatusBar barStyle="light-content" />
         <GestureDetector gesture={verticalPanGesture}>
-          <Animated.View style={[styles.container, animatedStyle]}>
-            <FlatList
+          <Animated.View
+            style={[styles.container, containerStyle, animatedStyle]}
+          >
+            <Animated.FlatList
               ref={flatListRef}
               data={users}
               renderItem={renderUserStory}
-              keyExtractor={(item) => item.id}
+              keyExtractor={item => item.id}
               horizontal
               pagingEnabled
               showsHorizontalScrollIndicator={false}
               scrollEnabled={true}
+              onScroll={scrollHandler}
+              scrollEventThrottle={16}
               onScrollBeginDrag={handleScrollBeginDrag}
               onMomentumScrollEnd={handleMomentumScrollEnd}
               onScrollToIndexFailed={handleScrollToIndexFailed}
-              getItemLayout={(data, index) => ({
+              getItemLayout={(_data, index) => ({
                 length: SCREEN_WIDTH,
                 offset: SCREEN_WIDTH * index,
                 index,
@@ -170,11 +272,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000',
   },
-  userPage: {
-    width: SCREEN_WIDTH,
-    height: '100%',
-    backgroundColor: '#000',
-  },
   progressContainer: {
     position: 'absolute',
     top: 50,
@@ -185,6 +282,13 @@ const styles = StyleSheet.create({
   headerContainer: {
     position: 'absolute',
     top: 60,
+    left: 0,
+    right: 0,
+    zIndex: 2,
+  },
+  footerContainer: {
+    position: 'absolute',
+    bottom: 0,
     left: 0,
     right: 0,
     zIndex: 2,

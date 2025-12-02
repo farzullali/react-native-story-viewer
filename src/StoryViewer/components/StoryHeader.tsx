@@ -7,20 +7,20 @@ interface StoryHeaderProps {
   onClose: () => void;
 }
 
-export const StoryHeader: React.FC<StoryHeaderProps> = ({ user, onClose }) => {
+export const StoryHeader: React.FC<StoryHeaderProps> = React.memo(({ user, onClose }) => {
   return (
     <View style={styles.container}>
       <View style={styles.userInfo}>
         <Image source={{ uri: user.avatar }} style={styles.avatar} />
         <Text style={styles.username}>{user.name}</Text>
       </View>
-      
+
       <TouchableOpacity onPress={onClose} style={styles.closeButton}>
         <Text style={styles.closeText}>✕</Text>
       </TouchableOpacity>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

@@ -7,7 +7,7 @@ interface StoryProgressProps {
   progress: number;
 }
 
-export const StoryProgress: React.FC<StoryProgressProps> = ({
+export const StoryProgress: React.FC<StoryProgressProps> = React.memo(({
   currentIndex,
   totalStories,
   progress,
@@ -24,7 +24,7 @@ export const StoryProgress: React.FC<StoryProgressProps> = ({
       ))}
     </View>
   );
-};
+});
 
 interface ProgressBarProps {
   index: number;
@@ -32,7 +32,7 @@ interface ProgressBarProps {
   progress: number;
 }
 
-const ProgressBar: React.FC<ProgressBarProps> = ({
+const ProgressBar: React.FC<ProgressBarProps> = React.memo(({
   index,
   currentIndex,
   progress,
@@ -42,11 +42,9 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
   const seen = useRef(100);
   const unseen = useRef(0);
 
-  // TODO: Optimize this hook, because it is checking the index and currentIndex on every render. if u can
   useEffect(() => {
     let targetWidth = 0;
     if (index < currentIndex) {
-      // console.log(`${index} < ${currentIndex}`);
       targetWidth = 100; // Completed
       animatedWidth.setValue(seen.current);
     } else if (index === currentIndex) {
@@ -78,7 +76,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
       />
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {
