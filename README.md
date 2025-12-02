@@ -173,6 +173,7 @@ export default function App() {
 | `progressContainerStyle` | `ViewStyle`                                                | No       | -       | Style for progress container      |
 | `headerContainerStyle`   | `ViewStyle`                                                | No       | -       | Style for header container        |
 | `footerContainerStyle`   | `ViewStyle`                                                | No       | -       | Style for footer container        |
+| `swipeAnimationConfig`   | `SwipeAnimationConfig`                                     | No       | -       | Custom swipe animation config     |
 
 ### StoryUser Type
 
@@ -211,6 +212,25 @@ interface StoryRenderProps {
   onPrev: () => void;
   onPause: () => void;
   onResume: () => void;
+}
+```
+
+### SwipeAnimationConfig Type
+
+```typescript
+type SwipeAnimationType = 'default' | 'fade' | 'scale' | 'cube' | 'custom';
+
+interface SwipeAnimationConfig {
+  type?: SwipeAnimationType;
+  duration?: number; // Animation duration in milliseconds (default: 250)
+  customAnimation?: (
+    index: number,
+    scrollOffset: number,
+    itemWidth: number,
+  ) => {
+    opacity?: number;
+    transform?: Array<{ scale?: number; translateX?: number; rotateY?: string }>;
+  };
 }
 ```
 
@@ -339,6 +359,111 @@ const CustomStoryItem = ({ user, story, onClose, onNext, onPrev, index }) => (
   progressContainerStyle={{ paddingHorizontal: 20 }}
   footerContainerStyle={{ bottom: 40 }}
 />
+```
+
+### Custom Swipe Animations
+
+The library provides built-in swipe animation types and supports custom animations when transitioning between users.
+
+#### Built-in Animation Types
+
+**Default (no animation)**
+```typescript
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  swipeAnimationConfig={{ type: 'default' }}
+/>
+```
+
+**Fade Animation**
+```typescript
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  swipeAnimationConfig={{
+    type: 'fade',
+    duration: 300,
+  }}
+/>
+```
+
+**Scale Animation**
+```typescript
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  swipeAnimationConfig={{
+    type: 'scale',
+    duration: 250,
+  }}
+/>
+```
+
+**Cube Animation** (3D flip effect)
+```typescript
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  swipeAnimationConfig={{
+    type: 'cube',
+    duration: 400,
+  }}
+/>
+```
+
+#### Custom Animation
+
+Create your own animation by providing a custom function. **Important:** The custom animation function must be a worklet (add `'worklet';` directive).
+
+```typescript
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  swipeAnimationConfig={{
+    type: 'custom',
+    customAnimation: (index, scrollOffset, itemWidth) => {
+      'worklet';
+      // Calculate the position relative to the current view
+      const position = scrollOffset - index * itemWidth;
+      const progress = position / itemWidth;
+
+      // Example: Combined fade and scale effect
+      const opacity = 1 - Math.abs(progress) * 0.8;
+      const scale = 1 - Math.abs(progress) * 0.3;
+
+      return {
+        opacity: Math.max(0.2, Math.min(1, opacity)),
+        transform: [{ scale: Math.max(0.7, Math.min(1, scale)) }],
+      };
+    },
+  }}
+/>
+```
+
+**Custom Animation with Rotation**
+```typescript
+swipeAnimationConfig={{
+  type: 'custom',
+  customAnimation: (index, scrollOffset, itemWidth) => {
+    'worklet';
+    const position = scrollOffset - index * itemWidth;
+    const progress = position / itemWidth;
+
+    return {
+      transform: [
+        { perspective: 1000 },
+        { rotateY: `${progress * 45}deg` },
+        { scale: 1 - Math.abs(progress) * 0.1 },
+      ],
+    };
+  },
+}}
 ```
 
 ## Gestures

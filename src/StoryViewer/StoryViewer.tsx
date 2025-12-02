@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Dimensions,
-  FlatList,
   Modal,
   StatusBar,
   StyleSheet,
@@ -11,7 +10,8 @@ import {
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
-import Animated from 'react-native-reanimated';
+import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
+import { AnimatedStoryItem } from './components/AnimatedStoryItem';
 import { StoryContent } from './components/StoryContent';
 import { StoryHeader } from './components/StoryHeader';
 import { StoryProgress } from './components/StoryProgress';
@@ -39,8 +39,10 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
   headerContainerStyle,
   footerContainerStyle,
   defaultStoryDuration = 5000,
+  swipeAnimationConfig,
 }) => {
   const [isPaused, setIsPaused] = useState(false);
+  const scrollOffset = useSharedValue(0);
 
   // Navigation logic
   const {
@@ -89,6 +91,13 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
     visible,
   });
 
+  // Animated scroll handler
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollOffset.value = event.contentOffset.x;
+    },
+  });
+
   // Reset timer and trigger view callback when story changes
   useEffect(() => {
     if (visible && currentStory) {
@@ -127,56 +136,66 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
         onResume: handlePressOut,
       };
 
-      // If custom renderItem is provided, use it
-      if (renderItem) {
-        return renderItem({ ...renderProps, index });
-      }
+      const content = (
+        <>
+          {!renderItem && (
+            <>
+              {/* Progress bars */}
+              <View style={[styles.progressContainer, progressContainerStyle]}>
+                {renderProgress ? (
+                  renderProgress(renderProps)
+                ) : (
+                  <StoryProgress
+                    totalStories={user.stories.length}
+                    currentIndex={isCurrentUser ? currentStoryIndex : 0}
+                    progress={isCurrentUser ? progress : 0}
+                  />
+                )}
+              </View>
 
-      // Default rendering
+              {/* Header */}
+              <View style={[styles.headerContainer, headerContainerStyle]}>
+                {renderHeader ? (
+                  renderHeader(renderProps)
+                ) : (
+                  <StoryHeader user={user} onClose={onClose} />
+                )}
+              </View>
+
+              {/* Content */}
+              {renderContent ? (
+                renderContent(renderProps)
+              ) : (
+                <StoryContent
+                  story={story}
+                  onTapLeft={goToPrevStory}
+                  onTapRight={goToNextStory}
+                  onPressIn={handlePressIn}
+                  onPressOut={handlePressOut}
+                />
+              )}
+
+              {/* Footer */}
+              {renderFooter && (
+                <View style={[styles.footerContainer, footerContainerStyle]}>
+                  {renderFooter(renderProps)}
+                </View>
+              )}
+            </>
+          )}
+          {renderItem && renderItem({ ...renderProps, index })}
+        </>
+      );
+
       return (
-        <View style={styles.userPage}>
-          {/* Progress bars */}
-          <View style={[styles.progressContainer, progressContainerStyle]}>
-            {renderProgress ? (
-              renderProgress(renderProps)
-            ) : (
-              <StoryProgress
-                totalStories={user.stories.length}
-                currentIndex={isCurrentUser ? currentStoryIndex : 0}
-                progress={isCurrentUser ? progress : 0}
-              />
-            )}
-          </View>
-
-          {/* Header */}
-          <View style={[styles.headerContainer, headerContainerStyle]}>
-            {renderHeader ? (
-              renderHeader(renderProps)
-            ) : (
-              <StoryHeader user={user} onClose={onClose} />
-            )}
-          </View>
-
-          {/* Content */}
-          {renderContent ? (
-            renderContent(renderProps)
-          ) : (
-            <StoryContent
-              story={story}
-              onTapLeft={goToPrevStory}
-              onTapRight={goToNextStory}
-              onPressIn={handlePressIn}
-              onPressOut={handlePressOut}
-            />
-          )}
-
-          {/* Footer */}
-          {renderFooter && (
-            <View style={[styles.footerContainer, footerContainerStyle]}>
-              {renderFooter(renderProps)}
-            </View>
-          )}
-        </View>
+        <AnimatedStoryItem
+          index={index}
+          scrollOffset={scrollOffset}
+          animationConfig={swipeAnimationConfig}
+          width={SCREEN_WIDTH}
+        >
+          {content}
+        </AnimatedStoryItem>
       );
     },
     [
@@ -196,6 +215,8 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
       progressContainerStyle,
       headerContainerStyle,
       footerContainerStyle,
+      swipeAnimationConfig,
+      scrollOffset,
     ],
   );
 
@@ -217,7 +238,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
           <Animated.View
             style={[styles.container, containerStyle, animatedStyle]}
           >
-            <FlatList
+            <Animated.FlatList
               ref={flatListRef}
               data={users}
               renderItem={renderUserStory}
@@ -226,10 +247,12 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
               pagingEnabled
               showsHorizontalScrollIndicator={false}
               scrollEnabled={true}
+              onScroll={scrollHandler}
+              scrollEventThrottle={16}
               onScrollBeginDrag={handleScrollBeginDrag}
               onMomentumScrollEnd={handleMomentumScrollEnd}
               onScrollToIndexFailed={handleScrollToIndexFailed}
-              getItemLayout={(data, index) => ({
+              getItemLayout={(_data, index) => ({
                 length: SCREEN_WIDTH,
                 offset: SCREEN_WIDTH * index,
                 index,
@@ -247,11 +270,6 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
-  },
-  userPage: {
-    width: SCREEN_WIDTH,
-    height: '100%',
     backgroundColor: '#000',
   },
   progressContainer: {

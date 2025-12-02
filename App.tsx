@@ -114,6 +114,9 @@ export default function App() {
         onStoryView={(userId, storyId) => {
           console.log(`Viewing story ${storyId} from user ${userId}`);
         }}
+        swipeAnimationConfig={{
+          type: 'scale',
+        }}
       />
       {/* )} */}
     </View>

@@ -29,6 +29,18 @@ export interface StoryRenderProps {
   onResume: () => void;
 }
 
+export type SwipeAnimationType = 'default' | 'fade' | 'scale' | 'cube' | 'custom';
+
+export interface SwipeAnimationConfig {
+  type?: SwipeAnimationType;
+  duration?: number; // Animation duration in milliseconds (default: 250)
+  customAnimation?: (
+    index: number,
+    scrollOffset: number,
+    itemWidth: number,
+  ) => Record<string, any>;
+}
+
 export interface StoryViewerProps {
   users: StoryUser[];
   initialUserIndex?: number;
@@ -51,4 +63,7 @@ export interface StoryViewerProps {
 
   // Duration settings (in milliseconds)
   defaultStoryDuration?: number; // Default duration for each story (default: 5000ms)
+
+  // Swipe animation configuration
+  swipeAnimationConfig?: SwipeAnimationConfig;
 }
