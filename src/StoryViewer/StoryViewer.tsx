@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Modal, StyleSheet, StatusBar, Dimensions } from 'react-native';
+import { View, Modal, StyleSheet, StatusBar, Dimensions, FlatList } from 'react-native';
 import {
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
-import { StoryViewerProps } from './types';
+import Animated from 'react-native-reanimated';
+import { StoryViewerProps, StoryUser } from './types';
 import { useStoryNavigation } from './hooks/useStoryNavigation';
 import { useStoryTimer } from './hooks/useStoryTimer';
-import { useStoryGestures } from './hooks/useStoryGestures';
+import { useStoryScroll } from './hooks/useStoryScroll';
+import { useVerticalCloseGesture } from './hooks/useVerticalCloseGesture';
 import { StoryProgress } from './components/StoryProgress';
 import { StoryHeader } from './components/StoryHeader';
 import { StoryContent } from './components/StoryContent';
@@ -31,8 +32,6 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
     currentUser,
     currentStory,
     totalStories,
-    isFirstUser,
-    isLastUser,
     goToNextStory,
     goToPrevStory,
     goToUser,
@@ -43,46 +42,37 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
     onClose,
   });
 
-  // Navigation for gestures
-  const handleNextUser = () => {
-    if (!isLastUser) {
-      goToUser(currentUserIndex + 1);
-    }
-  };
-
-  const handlePrevUser = () => {
-    if (!isFirstUser) {
-      goToUser(currentUserIndex - 1);
-    }
-  };
-
   // Timer logic
   const { progress, reset } = useStoryTimer({
     duration: currentStory?.duration || 5000,
     isPaused,
     onComplete: goToNextStory,
+    key: currentStory?.id,
   });
 
-  // Gesture logic
-  const { panGesture, translateX, translateY } = useStoryGestures({
+  // FlatList scroll management
+  const {
+    flatListRef,
+    handleScrollBeginDrag,
+    handleMomentumScrollEnd,
+    handleScrollToIndexFailed,
+  } = useStoryScroll({
+    currentUserIndex,
+    visible,
+    onUserChange: goToUser,
+    onScrollStart: () => setIsPaused(true),
+    onScrollEnd: () => setIsPaused(false),
+  });
+
+  // Vertical close gesture
+  const { verticalPanGesture, animatedStyle } = useVerticalCloseGesture({
     onClose,
-    onNextUser: handleNextUser,
-    onPrevUser: handlePrevUser,
     onPause: () => setIsPaused(true),
     onResume: () => setIsPaused(false),
-    canGoNext: !isLastUser,
-    canGoPrev: !isFirstUser,
+    visible,
   });
 
-  // Animated styles for gesture
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-    ],
-  }));
-
-  // Reset timer when story changes
+  // Reset timer and trigger view callback when story changes
   useEffect(() => {
     if (visible && currentStory) {
       reset();
@@ -102,6 +92,41 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
     return null;
   }
 
+  // Render each user's story page
+  const renderUserStory = ({ item: user, index }: { item: StoryUser; index: number }) => {
+    const isCurrentUser = index === currentUserIndex;
+    const story = user.stories[isCurrentUser ? currentStoryIndex : 0];
+
+    return (
+      <View style={styles.userPage}>
+        {/* Progress bars */}
+        <View style={styles.progressContainer}>
+          <StoryProgress
+            totalStories={user.stories.length}
+            currentIndex={isCurrentUser ? currentStoryIndex : 0}
+            progress={isCurrentUser ? progress : 0}
+          />
+        </View>
+
+        {/* Header */}
+        <View style={styles.headerContainer}>
+          <StoryHeader user={user} onClose={onClose} />
+        </View>
+
+        {/* Content */}
+        {story && (
+          <StoryContent
+            story={story}
+            onTapLeft={goToPrevStory}
+            onTapRight={goToNextStory}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+          />
+        )}
+      </View>
+    );
+  };
+
   return (
     <Modal
       visible={visible}
@@ -111,29 +136,27 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
     >
       <GestureHandlerRootView style={{ flex: 1, backgroundColor: 'black' }}>
         <StatusBar barStyle="light-content" />
-        <GestureDetector gesture={panGesture}>
+        <GestureDetector gesture={verticalPanGesture}>
           <Animated.View style={[styles.container, animatedStyle]}>
-            {/* Progress bars */}
-            <View style={styles.progressContainer}>
-              <StoryProgress
-                totalStories={totalStories}
-                currentIndex={currentStoryIndex}
-                progress={progress}
-              />
-            </View>
-
-            {/* Header */}
-            <View style={styles.headerContainer}>
-              <StoryHeader user={currentUser} onClose={onClose} />
-            </View>
-
-            {/* Content */}
-            <StoryContent
-              story={currentStory}
-              onTapLeft={goToPrevStory}
-              onTapRight={goToNextStory}
-              onPressIn={handlePressIn}
-              onPressOut={handlePressOut}
+            <FlatList
+              ref={flatListRef}
+              data={users}
+              renderItem={renderUserStory}
+              keyExtractor={(item) => item.id}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              scrollEnabled={true}
+              onScrollBeginDrag={handleScrollBeginDrag}
+              onMomentumScrollEnd={handleMomentumScrollEnd}
+              onScrollToIndexFailed={handleScrollToIndexFailed}
+              getItemLayout={(data, index) => ({
+                length: SCREEN_WIDTH,
+                offset: SCREEN_WIDTH * index,
+                index,
+              })}
+              initialScrollIndex={initialUserIndex}
+              removeClippedSubviews={false}
             />
           </Animated.View>
         </GestureDetector>
@@ -145,6 +168,11 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#000',
+  },
+  userPage: {
+    width: SCREEN_WIDTH,
+    height: '100%',
     backgroundColor: '#000',
   },
   progressContainer: {
