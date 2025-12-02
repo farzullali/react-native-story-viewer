@@ -1,11 +1,12 @@
+import { useEffect } from 'react';
 import { Dimensions } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
 import {
   runOnJS,
+  useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
-  useAnimatedStyle,
 } from 'react-native-reanimated';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -27,9 +28,11 @@ export const useVerticalCloseGesture = ({
   const translateY = useSharedValue(0);
 
   // Reset position when modal opens
-  if (visible && translateY.value !== 0) {
-    translateY.value = 0;
-  }
+  useEffect(() => {
+    if (visible) {
+      translateY.value = 0;
+    }
+  }, [visible, translateY]);
 
   // Vertical pan gesture for closing (swipe down)
   const verticalPanGesture = Gesture.Pan()
@@ -37,7 +40,7 @@ export const useVerticalCloseGesture = ({
       'worklet';
       runOnJS(onPause)();
     })
-    .onUpdate((event) => {
+    .onUpdate(event => {
       'worklet';
       const { translationY } = event;
 
@@ -46,11 +49,12 @@ export const useVerticalCloseGesture = ({
         translateY.value = translationY;
       }
     })
-    .onEnd((event) => {
+    .onEnd(event => {
       'worklet';
       const { translationY, velocityY } = event;
 
-      const shouldClose = translationY > SWIPE_DOWN_THRESHOLD || velocityY > 500;
+      const shouldClose =
+        translationY > SWIPE_DOWN_THRESHOLD || velocityY > 500;
 
       if (shouldClose) {
         translateY.value = withTiming(SCREEN_HEIGHT, { duration: 250 }, () => {

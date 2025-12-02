@@ -7,11 +7,18 @@ interface UseStoryTimerProps {
   key?: string | number; // Unique key to force timer restart
 }
 
-export const useStoryTimer = ({ duration, isPaused, onComplete, key }: UseStoryTimerProps) => {
+export const useStoryTimer = ({
+  duration,
+  isPaused,
+  onComplete,
+  key,
+}: UseStoryTimerProps) => {
   const [progress, setProgress] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startTimeRef = useRef<number>(0);
   const elapsedRef = useRef<number>(0);
+  const prevKeyRef = useRef(key);
+  const hasCompletedRef = useRef(false);
 
   const clear = useCallback(() => {
     if (intervalRef.current) {
@@ -24,18 +31,42 @@ export const useStoryTimer = ({ duration, isPaused, onComplete, key }: UseStoryT
     // clear();
     setProgress(0);
     elapsedRef.current = 0;
-  }, [clear]);
+    hasCompletedRef.current = false;
+  }, []);
+
+  // Store onComplete in a ref to avoid it being a dependency
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
-    // Reset progress when key changes (new story)
-    setProgress(0);
-    elapsedRef.current = 0;
+    // Only reset progress when key changes (new story), not on pause/resume
+    if (prevKeyRef.current !== key) {
+      setProgress(0);
+      elapsedRef.current = 0;
+      hasCompletedRef.current = false;
+      prevKeyRef.current = key;
+    }
 
     if (isPaused) {
       if (intervalRef.current) {
+        // Timer was running, save the elapsed time
         elapsedRef.current += Date.now() - startTimeRef.current;
         clear();
+      } else if (startTimeRef.current > 0) {
+        // Timer was running but cleanup already cleared the interval
+        // Still need to save elapsed time
+        elapsedRef.current += Date.now() - startTimeRef.current;
       }
+      // Update progress to reflect paused state
+      const pausedProgress = Math.min(elapsedRef.current / duration, 1);
+      setProgress(pausedProgress);
+      return;
+    }
+
+    // Don't restart if already completed
+    if (hasCompletedRef.current) {
       return;
     }
 
@@ -48,14 +79,15 @@ export const useStoryTimer = ({ duration, isPaused, onComplete, key }: UseStoryT
 
       setProgress(newProgress);
 
-      if (newProgress >= 1) {
+      if (newProgress >= 1 && !hasCompletedRef.current) {
+        hasCompletedRef.current = true;
         clear();
-        onComplete();
+        onCompleteRef.current();
       }
     }, 16);
 
     return () => clear();
-  }, [key, isPaused, duration, onComplete, clear]);
+  }, [key, isPaused, duration, clear]);
 
   return { progress, reset };
 };

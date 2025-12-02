@@ -21,6 +21,32 @@ export const StoryContent: React.FC<StoryContentProps> = React.memo(({
   onPressOut,
 }) => {
   const [imageError, setImageError] = useState(false);
+  const pressStartTime = React.useRef<number>(0);
+
+  const handlePressIn = () => {
+    pressStartTime.current = Date.now();
+    onPressIn();
+  };
+
+  const handlePressOut = () => {
+    onPressOut();
+  };
+
+  const handleTapLeft = () => {
+    const pressDuration = Date.now() - pressStartTime.current;
+    // Only navigate if it was a quick tap (less than 200ms)
+    if (pressDuration < 200) {
+      onTapLeft();
+    }
+  };
+
+  const handleTapRight = () => {
+    const pressDuration = Date.now() - pressStartTime.current;
+    // Only navigate if it was a quick tap (less than 200ms)
+    if (pressDuration < 200) {
+      onTapRight();
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -46,18 +72,18 @@ export const StoryContent: React.FC<StoryContentProps> = React.memo(({
         <TouchableOpacity
           style={styles.tapZoneLeft}
           activeOpacity={1}
-          onPress={onTapLeft}
-          onPressIn={onPressIn}
-          onPressOut={onPressOut}
+          onPress={handleTapLeft}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
         />
-        
+
         {/* Right tap zone - next story */}
         <TouchableOpacity
           style={styles.tapZoneRight}
           activeOpacity={1}
-          onPress={onTapRight}
-          onPressIn={onPressIn}
-          onPressOut={onPressOut}
+          onPress={handleTapRight}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
         />
       </View>
     </View>

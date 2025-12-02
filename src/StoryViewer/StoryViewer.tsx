@@ -97,13 +97,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
 
   // Render each user's story page
   const renderUserStory = useCallback(
-    ({
-      item: user,
-      index,
-    }: {
-      item: StoryUser;
-      index: number;
-    }) => {
+    ({ item: user, index }: { item: StoryUser; index: number }) => {
       const isCurrentUser = index === currentUserIndex;
       const story = user.stories[isCurrentUser ? currentStoryIndex : 0];
 
@@ -145,7 +139,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
       goToNextStory,
       handlePressIn,
       handlePressOut,
-    ]
+    ],
   );
 
   if (!visible || !currentUser || !currentStory) {
@@ -158,8 +152,11 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
       animationType="slide"
       onRequestClose={onClose}
       statusBarTranslucent
+      style={{ backgroundColor: 'red' }}
     >
-      <GestureHandlerRootView style={{ flex: 1, backgroundColor: 'black' }}>
+      <GestureHandlerRootView
+        style={{ flex: 1, backgroundColor: 'transparent' }}
+      >
         <StatusBar barStyle="light-content" />
         <GestureDetector gesture={verticalPanGesture}>
           <Animated.View style={[styles.container, animatedStyle]}>
