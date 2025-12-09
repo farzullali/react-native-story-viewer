@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Image, TouchableOpacity, StyleSheet, Dimensions, Text } from 'react-native';
+import React from 'react';
+import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Story } from '../types';
 import PreloadImage from './PreloadImage';
 
@@ -13,45 +13,39 @@ interface StoryContentProps {
   onPressOut: () => void;
 }
 
-export const StoryContent: React.FC<StoryContentProps> = React.memo(({
-  story,
-  onTapLeft,
-  onTapRight,
-  onPressIn,
-  onPressOut,
-}) => {
-  const [imageError, setImageError] = useState(false);
-  const pressStartTime = React.useRef<number>(0);
+export const StoryContent: React.FC<StoryContentProps> = React.memo(
+  ({ story, onTapLeft, onTapRight, onPressIn, onPressOut }) => {
+    const pressStartTime = React.useRef<number>(0);
 
-  const handlePressIn = () => {
-    pressStartTime.current = Date.now();
-    onPressIn();
-  };
+    const handlePressIn = () => {
+      pressStartTime.current = Date.now();
+      onPressIn();
+    };
 
-  const handlePressOut = () => {
-    onPressOut();
-  };
+    const handlePressOut = () => {
+      onPressOut();
+    };
 
-  const handleTapLeft = () => {
-    const pressDuration = Date.now() - pressStartTime.current;
-    // Only navigate if it was a quick tap (less than 200ms)
-    if (pressDuration < 200) {
-      onTapLeft();
-    }
-  };
+    const handleTapLeft = () => {
+      const pressDuration = Date.now() - pressStartTime.current;
+      // Only navigate if it was a quick tap (less than 200ms)
+      if (pressDuration < 200) {
+        onTapLeft();
+      }
+    };
 
-  const handleTapRight = () => {
-    const pressDuration = Date.now() - pressStartTime.current;
-    // Only navigate if it was a quick tap (less than 200ms)
-    if (pressDuration < 200) {
-      onTapRight();
-    }
-  };
+    const handleTapRight = () => {
+      const pressDuration = Date.now() - pressStartTime.current;
+      // Only navigate if it was a quick tap (less than 200ms)
+      if (pressDuration < 200) {
+        onTapRight();
+      }
+    };
 
-  return (
-    <View style={styles.container}>
-      {/* Image */}
-      {/* {!imageError ? (
+    return (
+      <View style={styles.container}>
+        {/* Image */}
+        {/* {!imageError ? (
         <Image
           source={{ uri: story.url }}
           style={styles.image}
@@ -64,31 +58,32 @@ export const StoryContent: React.FC<StoryContentProps> = React.memo(({
         </View>
       )} */}
 
-      <PreloadImage source={{ uri: story.url }} style={styles.image} />
+        <PreloadImage source={{ uri: story.url }} style={styles.image} />
 
-      {/* Tap zones - invisible overlay */}
-      <View style={styles.tapZonesContainer}>
-        {/* Left tap zone - previous story */}
-        <TouchableOpacity
-          style={styles.tapZoneLeft}
-          activeOpacity={1}
-          onPress={handleTapLeft}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-        />
+        {/* Tap zones - invisible overlay */}
+        <View style={styles.tapZonesContainer}>
+          {/* Left tap zone - previous story */}
+          <TouchableOpacity
+            style={styles.tapZoneLeft}
+            activeOpacity={1}
+            onPress={handleTapLeft}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+          />
 
-        {/* Right tap zone - next story */}
-        <TouchableOpacity
-          style={styles.tapZoneRight}
-          activeOpacity={1}
-          onPress={handleTapRight}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-        />
+          {/* Right tap zone - next story */}
+          <TouchableOpacity
+            style={styles.tapZoneRight}
+            activeOpacity={1}
+            onPress={handleTapRight}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+          />
+        </View>
       </View>
-    </View>
-  );
-});
+    );
+  },
+);
 
 const styles = StyleSheet.create({
   container: {

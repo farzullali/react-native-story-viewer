@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import { StyleSheet, View, Animated } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, View } from 'react-native';
 
 interface StoryProgressProps {
   currentIndex: number;
@@ -7,24 +7,22 @@ interface StoryProgressProps {
   progress: number;
 }
 
-export const StoryProgress: React.FC<StoryProgressProps> = React.memo(({
-  currentIndex,
-  totalStories,
-  progress,
-}) => {
-  return (
-    <View style={styles.container}>
-      {Array.from({ length: totalStories }).map((_, index) => (
-        <ProgressBar
-          key={index}
-          index={index}
-          currentIndex={currentIndex}
-          progress={progress}
-        />
-      ))}
-    </View>
-  );
-});
+export const StoryProgress: React.FC<StoryProgressProps> = React.memo(
+  ({ currentIndex, totalStories, progress }) => {
+    return (
+      <View style={styles.container}>
+        {Array.from({ length: totalStories }).map((_, index) => (
+          <ProgressBar
+            key={index}
+            index={index}
+            currentIndex={currentIndex}
+            progress={progress}
+          />
+        ))}
+      </View>
+    );
+  },
+);
 
 interface ProgressBarProps {
   index: number;
@@ -32,51 +30,59 @@ interface ProgressBarProps {
   progress: number;
 }
 
-const ProgressBar: React.FC<ProgressBarProps> = React.memo(({
-  index,
-  currentIndex,
-  progress,
-}) => {
-  const animatedWidth = useRef(new Animated.Value(0)).current;
+const ProgressBar: React.FC<ProgressBarProps> = React.memo(
+  ({ index, currentIndex, progress }) => {
+    const animatedWidth = useRef(new Animated.Value(0)).current;
+    const prevIndexRef = useRef(currentIndex);
 
-  const seen = useRef(100);
-  const unseen = useRef(0);
+    useEffect(() => {
+      let targetWidth = 0;
 
-  useEffect(() => {
-    let targetWidth = 0;
-    if (index < currentIndex) {
-      targetWidth = 100; // Completed
-      animatedWidth.setValue(seen.current);
-    } else if (index === currentIndex) {
-      targetWidth = progress * 100; // Current
-    } else {
-      targetWidth = 0; // Not started
-      animatedWidth.setValue(unseen.current);
-    }
+      if (index < currentIndex) {
+        targetWidth = 100;
+      } else if (index === currentIndex) {
+        targetWidth = progress * 100;
+      }
 
-    Animated.timing(animatedWidth, {
-      toValue: targetWidth,
-      duration: 100,
-      useNativeDriver: false, // Width animation requires false
-    }).start();
-  }, [index, currentIndex, progress, animatedWidth]);
+      const isMovingForward = currentIndex > prevIndexRef.current;
 
-  return (
-    <View style={styles.progressBarContainer}>
-      <Animated.View
-        style={[
-          styles.progressBar,
-          {
-            width: animatedWidth.interpolate({
-              inputRange: [0, 100],
-              outputRange: ['0%', '100%'],
-            }),
-          },
-        ]}
-      />
-    </View>
-  );
-});
+      if (prevIndexRef.current !== currentIndex) {
+        animatedWidth.stopAnimation();
+        prevIndexRef.current = currentIndex;
+      }
+
+      if (index === currentIndex && isMovingForward) {
+        // Reset to 0 on story change, then animate
+        if (progress === 0) {
+          animatedWidth.setValue(0);
+        }
+        Animated.timing(animatedWidth, {
+          toValue: targetWidth,
+          duration: 100,
+          useNativeDriver: false,
+        }).start();
+      } else {
+        animatedWidth.setValue(targetWidth);
+      }
+    }, [index, currentIndex, progress, animatedWidth]);
+
+    return (
+      <View style={styles.progressBarContainer}>
+        <Animated.View
+          style={[
+            styles.progressBar,
+            {
+              width: animatedWidth.interpolate({
+                inputRange: [0, 100],
+                outputRange: ['0%', '100%'],
+              }),
+            },
+          ]}
+        />
+      </View>
+    );
+  },
+);
 
 const styles = StyleSheet.create({
   container: {

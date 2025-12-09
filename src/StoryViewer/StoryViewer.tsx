@@ -1,16 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  Dimensions,
-  Modal,
-  StatusBar,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Dimensions, Modal, StatusBar, StyleSheet, View } from 'react-native';
 import {
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
-import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedScrollHandler,
+  useSharedValue,
+} from 'react-native-reanimated';
 import { AnimatedStoryItem } from './components/AnimatedStoryItem';
 import { StoryContent } from './components/StoryContent';
 import { StoryHeader } from './components/StoryHeader';
@@ -50,7 +47,6 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
     currentStoryIndex,
     currentUser,
     currentStory,
-    totalStories,
     goToNextStory,
     goToPrevStory,
     goToUser,
@@ -93,7 +89,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
 
   // Animated scroll handler
   const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
+    onScroll: event => {
       scrollOffset.value = event.contentOffset.x;
     },
   });
@@ -259,6 +255,8 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
               })}
               initialScrollIndex={initialUserIndex}
               removeClippedSubviews={false}
+              style={styles.flatList}
+              contentContainerStyle={styles.flatListContent}
             />
           </Animated.View>
         </GestureDetector>
@@ -278,6 +276,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 2,
+  },
+  flatList: {
+    flex: 1,
+  },
+  flatListContent: {
+    flexGrow: 1,
   },
   headerContainer: {
     position: 'absolute',
