@@ -115,7 +115,7 @@ export default function App() {
           console.log(`Viewing story ${storyId} from user ${userId}`);
         }}
         swipeAnimationConfig={{
-          type: 'scale',
+          type: 'default',
         }}
       />
       {/* )} */}
