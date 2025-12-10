@@ -6,6 +6,7 @@ export interface Story {
   type: 'image' | 'video';
   url: string;
   duration?: number; // milliseconds, default 5000
+  [key: string]: any; // Allow additional custom properties
 }
 
 export interface StoryUser {
@@ -13,6 +14,7 @@ export interface StoryUser {
   name: string;
   avatar: string;
   stories: Story[];
+  [key: string]: any; // Allow additional custom properties
 }
 
 export interface StoryRenderProps {
@@ -29,7 +31,12 @@ export interface StoryRenderProps {
   onResume: () => void;
 }
 
-export type SwipeAnimationType = 'default' | 'fade' | 'scale' | 'cube' | 'custom';
+export type SwipeAnimationType =
+  | 'default'
+  | 'fade'
+  | 'scale'
+  | 'cube'
+  | 'custom';
 
 export interface SwipeAnimationConfig {
   type?: SwipeAnimationType;

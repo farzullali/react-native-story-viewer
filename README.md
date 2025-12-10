@@ -229,7 +229,11 @@ interface SwipeAnimationConfig {
     itemWidth: number,
   ) => {
     opacity?: number;
-    transform?: Array<{ scale?: number; translateX?: number; rotateY?: string }>;
+    transform?: Array<{
+      scale?: number;
+      translateX?: number;
+      rotateY?: string;
+    }>;
   };
 }
 ```
@@ -361,6 +365,128 @@ const CustomStoryItem = ({ user, story, onClose, onNext, onPrev, index }) => (
 />
 ```
 
+### Custom Properties in Stories and Users
+
+You can add any custom properties to your `Story` and `StoryUser` objects, and they will be accessible in all render methods. This is useful for passing additional metadata, configuration, or custom data.
+
+#### Example: Adding Custom Properties
+
+```typescript
+const users: StoryUser[] = [
+  {
+    id: '1',
+    name: 'John Doe',
+    avatar: 'https://example.com/avatar.jpg',
+    // Custom user-level properties
+    verified: true,
+    followers: 1234,
+    customUserData: { role: 'admin' },
+    stories: [
+      {
+        id: 's1',
+        type: 'image',
+        url: 'https://example.com/story1.jpg',
+        duration: 5000,
+        // Custom story-level properties
+        test: 'Custom test value',
+        location: 'New York',
+        likes: 42,
+        tags: ['travel', 'food'],
+        customData: {
+          productId: '12345',
+          price: 99.99,
+          inStock: true,
+        },
+      },
+    ],
+  },
+];
+```
+
+#### Accessing Custom Properties in Render Methods
+
+All custom properties are available through the `story` and `user` objects in your render methods:
+
+```typescript
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  // Access custom properties in any render method
+  renderFooter={({ story, user }) => {
+    // Access custom story properties
+    const testProp = story.test;
+    const location = story.location;
+    const customData = story.customData;
+
+    // Access custom user properties
+    const isVerified = user.verified;
+    const followers = user.followers;
+
+    return (
+      <View style={{ padding: 20, backgroundColor: 'rgba(0,0,0,0.7)' }}>
+        {testProp && <Text style={{ color: '#fff' }}>Test: {testProp}</Text>}
+        {location && <Text style={{ color: '#fff' }}>📍 {location}</Text>}
+        {customData && (
+          <View>
+            <Text style={{ color: '#fff' }}>Product: ${customData.price}</Text>
+            <Text style={{ color: customData.inStock ? '#0f0' : '#f00' }}>
+              {customData.inStock ? 'In Stock' : 'Out of Stock'}
+            </Text>
+          </View>
+        )}
+        <Text style={{ color: '#aaa' }}>
+          {user.name} {isVerified && '✓'} • {followers} followers
+        </Text>
+      </View>
+    );
+  }}
+  // Also available in renderHeader, renderContent, renderProgress, and renderItem
+  renderHeader={({ story, user }) => (
+    <View>
+      <Text style={{ color: '#fff' }}>
+        {user.name} {user.verified && '✓'}
+      </Text>
+      {story.tags && (
+        <Text style={{ color: '#aaa' }}>{story.tags.join(' • ')}</Text>
+      )}
+    </View>
+  )}
+/>
+```
+
+#### Use Cases for Custom Properties
+
+- **E-commerce**: Add product IDs, prices, inventory status
+- **Analytics**: Track engagement metrics, view counts, likes
+- **Metadata**: Location tags, timestamps, categories
+- **Features**: Verification badges, premium content flags
+- **Deep linking**: URLs, navigation parameters
+- **Localization**: Language-specific content, translations
+- **A/B Testing**: Experiment IDs, variant information
+
+#### TypeScript Support
+
+The `Story` and `StoryUser` interfaces support index signatures, allowing any additional properties while maintaining type safety for the required fields:
+
+```typescript
+interface Story {
+  id: string;
+  type: 'image' | 'video';
+  url: string;
+  duration?: number;
+  [key: string]: any; // Allows any custom properties
+}
+
+interface StoryUser {
+  id: string;
+  name: string;
+  avatar: string;
+  stories: Story[];
+  [key: string]: any; // Allows any custom properties
+}
+```
+
 ### Custom Swipe Animations
 
 The library provides built-in swipe animation types and supports custom animations when transitioning between users.
@@ -368,6 +494,7 @@ The library provides built-in swipe animation types and supports custom animatio
 #### Built-in Animation Types
 
 **Default (no animation)**
+
 ```typescript
 <StoryViewer
   users={users}
@@ -378,6 +505,7 @@ The library provides built-in swipe animation types and supports custom animatio
 ```
 
 **Fade Animation**
+
 ```typescript
 <StoryViewer
   users={users}
@@ -391,6 +519,7 @@ The library provides built-in swipe animation types and supports custom animatio
 ```
 
 **Scale Animation**
+
 ```typescript
 <StoryViewer
   users={users}
@@ -404,6 +533,7 @@ The library provides built-in swipe animation types and supports custom animatio
 ```
 
 **Cube Animation** (3D flip effect)
+
 ```typescript
 <StoryViewer
   users={users}
@@ -447,6 +577,7 @@ Create your own animation by providing a custom function. **Important:** The cus
 ```
 
 **Custom Animation with Rotation**
+
 ```typescript
 swipeAnimationConfig={{
   type: 'custom',
@@ -483,6 +614,33 @@ Check out the `src/StoryViewer/examples/` directory for more examples:
 - `CustomRenderExample.tsx` - Various customization examples
 
 ## Troubleshooting
+
+### ERESOLVE dependency conflict during installation
+
+If you encounter a dependency resolution error during installation:
+
+```
+npm error ERESOLVE unable to resolve dependency tree
+```
+
+You can install the package using one of these approaches:
+
+**Option 1: Use legacy peer deps (recommended)**
+```bash
+npm install @farzullali/react-native-story-viewer --legacy-peer-deps
+```
+
+**Option 2: Force installation**
+```bash
+npm install @farzullali/react-native-story-viewer --force
+```
+
+**Option 3: Update react-native-worklets**
+
+If you're using React Native Reanimated 4.x, updating to the latest worklets version may resolve conflicts:
+```bash
+npm install react-native-worklets@^0.7.1
+```
 
 ### Stories not animating
 
