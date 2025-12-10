@@ -7,18 +7,22 @@ const DUMMY_USERS: StoryUser[] = [
     id: '1',
     name: 'John Doe',
     avatar: 'https://i.pravatar.cc/150?img=1',
+    customUserProp: 'User level custom data', // Example custom property at user level
     stories: [
       {
         id: 'as23231cd',
         type: 'image',
         url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQfFhlQEw6PSx3BF6SapgxqFZsxLB0HUyk5pg&s',
         duration: 15000,
+        test: 'Custom test property', // Example custom property
+        customData: { foo: 'bar', value: 123 }, // Example nested custom data
       },
       {
         id: 'as23231cd12',
         type: 'image',
         url: 'https://img.freepik.com/free-psd/number-illustration-isolated_23-2151463626.jpg?semt=ais_hybrid&w=740&q=80',
         duration: 15000,
+        test: 'Another test value',
       },
       {
         id: 'as23231cd2',
@@ -117,6 +121,34 @@ export default function App() {
         swipeAnimationConfig={{
           type: 'default',
         }}
+        // Example: Custom footer to demonstrate accessing custom props
+        renderFooter={({ story, user }) => {
+          // Access custom properties from story and user objects
+          const testProp = story.test;
+          const customData = story.customData;
+          const userCustomProp = user.customUserProp;
+
+          // Only render if custom props exist
+          if (!testProp && !customData && !userCustomProp) {
+            return null;
+          }
+
+          return (
+            <View style={styles.customFooter}>
+              {testProp && (
+                <Text style={styles.customText}>Test: {testProp}</Text>
+              )}
+              {customData && (
+                <Text style={styles.customText}>
+                  Custom Data: {JSON.stringify(customData)}
+                </Text>
+              )}
+              {userCustomProp && (
+                <Text style={styles.customText}>User: {userCustomProp}</Text>
+              )}
+            </View>
+          );
+        }}
       />
       {/* )} */}
     </View>
@@ -149,5 +181,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     fontWeight: '600',
+  },
+  customFooter: {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: 15,
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+  },
+  customText: {
+    color: '#fff',
+    fontSize: 14,
+    marginVertical: 3,
   },
 });
