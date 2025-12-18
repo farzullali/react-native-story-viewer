@@ -175,6 +175,66 @@ export default function App() {
 | `footerContainerStyle`   | `ViewStyle`                                                | No       | -       | Style for footer container        |
 | `swipeAnimationConfig`   | `SwipeAnimationConfig`                                     | No       | -       | Custom swipe animation config     |
 
+### Additional Props
+
+| Prop               | Type               | Required | Default | Description             |
+| ------------------ | ------------------ | -------- | ------- | ----------------------- |
+| `imageAspectRatio` | `ImageAspectRatio` | No       | `'4:5'` | Aspect ratio for images |
+
+### ImageAspectRatio Type
+
+The `imageAspectRatio` prop allows you to control the aspect ratio of story images. It supports predefined values and custom ratios:
+
+```typescript
+type ImageAspectRatio = '16:9' | '4:5' | '1:1' | 'full' | string;
+```
+
+**Predefined Values:**
+
+- `'16:9'` - Widescreen (16:9 ratio)
+- `'4:5'` - Instagram Stories (4:5 ratio, default)
+- `'1:1'` - Square (1:1 ratio)
+- `'full'` - Full screen (fills entire viewer height)
+
+**Custom Values:**
+You can pass any custom aspect ratio as a string, such as `'9:16'`, `'1080:1350'`, etc.
+
+**Example Usage:**
+
+```typescript
+// Instagram Stories format (default)
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  imageAspectRatio="4:5"
+/>
+
+// Widescreen format
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  imageAspectRatio="16:9"
+/>
+
+// Square format
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  imageAspectRatio="1:1"
+/>
+
+// Custom aspect ratio
+<StoryViewer
+  users={users}
+  visible={visible}
+  onClose={() => setVisible(false)}
+  imageAspectRatio="9:16"
+/>
+```
+
 ### StoryUser Type
 
 ```typescript
@@ -626,11 +686,13 @@ npm error ERESOLVE unable to resolve dependency tree
 You can install the package using one of these approaches:
 
 **Option 1: Use legacy peer deps (recommended)**
+
 ```bash
 npm install @farzullali/react-native-story-viewer --legacy-peer-deps
 ```
 
 **Option 2: Force installation**
+
 ```bash
 npm install @farzullali/react-native-story-viewer --force
 ```
@@ -638,6 +700,7 @@ npm install @farzullali/react-native-story-viewer --force
 **Option 3: Update react-native-worklets**
 
 If you're using React Native Reanimated 4.x, updating to the latest worklets version may resolve conflicts:
+
 ```bash
 npm install react-native-worklets@^0.7.1
 ```

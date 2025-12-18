@@ -55,14 +55,16 @@ const ProgressBar: React.FC<ProgressBarProps> = React.memo(
         // Reset to 0 on story change, then animate
         if (progress === 0) {
           animatedWidth.setValue(0);
+          targetWidth = 0;
         }
         Animated.timing(animatedWidth, {
           toValue: targetWidth,
-          duration: 100,
+          duration: 500,
           useNativeDriver: false,
         }).start();
       } else {
         animatedWidth.setValue(targetWidth);
+        animatedWidth.stopAnimation();
       }
     }, [index, currentIndex, progress, animatedWidth]);
 

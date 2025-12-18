@@ -37,6 +37,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
   footerContainerStyle,
   defaultStoryDuration = 5000,
   swipeAnimationConfig,
+  imageAspectRatio = '4:5',
 }) => {
   const [isPaused, setIsPaused] = useState(false);
   const scrollOffset = useSharedValue(0);
@@ -168,6 +169,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
                   onTapRight={goToNextStory}
                   onPressIn={handlePressIn}
                   onPressOut={handlePressOut}
+                  imageAspectRatio={imageAspectRatio}
                 />
               )}
 
@@ -213,6 +215,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
       footerContainerStyle,
       swipeAnimationConfig,
       scrollOffset,
+      imageAspectRatio,
     ],
   );
 

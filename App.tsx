@@ -118,6 +118,7 @@ export default function App() {
         onStoryView={(userId, storyId) => {
           console.log(`Viewing story ${storyId} from user ${userId}`);
         }}
+        imageAspectRatio="1080:1350"
         swipeAnimationConfig={{
           type: 'default',
         }}

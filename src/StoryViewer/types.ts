@@ -48,6 +48,8 @@ export interface SwipeAnimationConfig {
   ) => Record<string, any>;
 }
 
+export type ImageAspectRatio = '16:9' | '4:5' | '1:1' | 'full' | string; // Supports '16:9', '4:5', '1:1', 'full', or custom like '1080:1350' or '9:16'
+
 export interface StoryViewerProps {
   users: StoryUser[];
   initialUserIndex?: number;
@@ -73,4 +75,7 @@ export interface StoryViewerProps {
 
   // Swipe animation configuration
   swipeAnimationConfig?: SwipeAnimationConfig;
+
+  // Image aspect ratio (default: '4:5')
+  imageAspectRatio?: ImageAspectRatio;
 }

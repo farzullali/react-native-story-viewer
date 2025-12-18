@@ -1,13 +1,21 @@
-import React, { useEffect, useState } from "react";
-import { Image, View, ActivityIndicator, StyleSheet } from "react-native";
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
 
 interface PreloadImageProps {
   source: { uri: string };
   style?: any;
   loader?: React.ReactNode;
+  height?: number;
+  width?: number;
 }
 
-export default function PreloadImage({ source, style, loader }: PreloadImageProps) {
+export default function PreloadImage({
+  source,
+  style,
+  height,
+  width,
+  loader,
+}: PreloadImageProps) {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -27,20 +35,21 @@ export default function PreloadImage({ source, style, loader }: PreloadImageProp
   }, [source.uri]);
 
   return (
-    <View style={style}>
-      {!loaded && (
-        loader || (
+    <View style={styles.container}>
+      {!loaded &&
+        (loader || (
           <View style={styles.loader}>
             <ActivityIndicator />
           </View>
-        )
-      )}
+        ))}
 
       {loaded && (
         <Image
           source={source}
-          style={[StyleSheet.absoluteFill, style]}
+          style={[style]}
           onLoad={() => setLoaded(true)}
+          width={width}
+          height={height}
         />
       )}
     </View>
@@ -50,7 +59,11 @@ export default function PreloadImage({ source, style, loader }: PreloadImageProp
 const styles = StyleSheet.create({
   loader: {
     ...StyleSheet.absoluteFillObject,
-    alignItems: "center",
-    justifyContent: "center",
+  },
+  container: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+    backgroundColor: 'black',
   },
 });
