@@ -1,6 +1,6 @@
 {
   "name": "@farzullali/react-native-story-viewer",
-  "version": "0.1.4",
+  "version": "0.1.8",
   "description": "A fully customizable Instagram-like story viewer component for React Native with gesture support, animations, and flexible rendering options",
   "main": "src/StoryViewer/index.tsx",
   "types": "src/StoryViewer/index.tsx",
@@ -43,7 +43,9 @@
     "react-native-gesture-handler": ">=2.0.0",
     "react-native-reanimated": ">=4.0.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "react-native-worklets": "0.7.1"
+  },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@babel/preset-env": "^7.25.3",
