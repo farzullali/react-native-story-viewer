@@ -63,6 +63,7 @@ export interface StoryViewerProps {
   renderContent?: (props: StoryRenderProps) => ReactNode;
   renderFooter?: (props: StoryRenderProps) => ReactNode;
   renderItem?: (props: StoryRenderProps & { index: number }) => ReactNode;
+  renderLoader?: (props: StoryRenderProps) => ReactNode;
 
   // Style props
   containerStyle?: ViewStyle;

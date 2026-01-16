@@ -12,6 +12,7 @@ interface StoryContentProps {
   onPressIn: () => void;
   onPressOut: () => void;
   imageAspectRatio?: ImageAspectRatio;
+  onImageLoadingChange?: (isLoading: boolean) => void;
 }
 
 // Helper function to calculate image height based on aspect ratio
@@ -50,6 +51,7 @@ export const StoryContent: React.FC<StoryContentProps> = React.memo(
     onPressIn,
     onPressOut,
     imageAspectRatio = '4:5',
+    onImageLoadingChange,
   }) => {
     const pressStartTime = React.useRef<number>(0);
     const imageHeight = calculateImageHeight(imageAspectRatio, SCREEN_WIDTH);
@@ -99,6 +101,7 @@ export const StoryContent: React.FC<StoryContentProps> = React.memo(
           source={{ uri: story.url }}
           height={imageHeight}
           width={SCREEN_WIDTH}
+          onLoadingChange={onImageLoadingChange}
         />
 
         {/* Tap zones - invisible overlay */}

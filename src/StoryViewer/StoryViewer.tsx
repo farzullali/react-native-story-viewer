@@ -31,6 +31,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
   renderContent,
   renderFooter,
   renderItem,
+  renderLoader,
   containerStyle,
   progressContainerStyle,
   headerContainerStyle,
@@ -40,6 +41,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
   imageAspectRatio = '4:5',
 }) => {
   const [isPaused, setIsPaused] = useState(false);
+  const [isImageLoading, setIsImageLoading] = useState(true);
   const scrollOffset = useSharedValue(0);
 
   // Navigation logic
@@ -61,7 +63,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
   // Timer logic
   const { progress, reset } = useStoryTimer({
     duration: currentStory?.duration || defaultStoryDuration,
-    isPaused,
+    isPaused: isPaused || isImageLoading,
     onComplete: goToNextStory,
     key: currentStory?.id,
   });
@@ -100,9 +102,11 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
     if (visible && currentStory) {
       reset();
       setIsPaused(false);
+      setIsImageLoading(true); // Reset loading state for new story
       onStoryView?.(currentUser.id, currentStory.id);
     } else {
       setIsPaused(true);
+      setIsImageLoading(true);
       reset();
     }
   }, [currentStory?.id, visible]);
@@ -110,6 +114,11 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
   // Pause/resume handlers for tap
   const handlePressIn = useCallback(() => setIsPaused(true), []);
   const handlePressOut = useCallback(() => setIsPaused(false), []);
+
+  // Image loading handler
+  const handleImageLoadingChange = useCallback((loading: boolean) => {
+    setIsImageLoading(loading);
+  }, []);
 
   // Render each user's story page
   const renderUserStory = useCallback(
@@ -170,6 +179,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
                   onPressIn={handlePressIn}
                   onPressOut={handlePressOut}
                   imageAspectRatio={imageAspectRatio}
+                  onImageLoadingChange={isCurrentUser ? handleImageLoadingChange : undefined}
                 />
               )}
 
