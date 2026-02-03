@@ -2,45 +2,8 @@ import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { StoryUser, StoryViewer } from './src/StoryViewer';
 
-[
-  {
-    id: '019ba231-fb9e-786c-82a7-cca35c279602',
-    name: 'Səbətləriniz Sürətlə Dolsun!',
-    coverBlobName: '500x500 veb_20260109_095831_9818bb3d.png',
-    items: [
-      {
-        id: '019bc089-3e4a-7db9-ac96-f6ccbafaecdc',
-        title: 'Səbətləriniz Sürətlə Dolsun!',
-        coverBlobName: 'ariel 23_20260115_072202_c3f76215.png',
-        mainBlobName:
-          'https://obafiles.blob.core.windows.net/oba-plus/ariel 23_20260115_072209_ac9d19c3.png',
-        link: 'https://oba.az/site/assets/files/3186/endirim-jurnali.pdf',
-        isSeen: false,
-        seenAt: null,
-      },
-      {
-        id: '019bc56d-8c02-70a0-a7a5-a311d9b7499e',
-        title: 'Səbətləriniz Sürətlə Dolsun!',
-        coverBlobName: 'nescafe_20260116_060935_7d903e9b.png',
-        mainBlobName:
-          'https://obafiles.blob.core.windows.net/oba-plus/nescafe_20260116_060935_90efac42.png',
-        link: 'https://oba.az/site/assets/files/3186/endirim-jurnali.pdf',
-        isSeen: false,
-        seenAt: null,
-      },
-      {
-        id: '019bc5ae-bdd0-7abf-bbdd-cbb5b9b320c7',
-        title: 'Səbətləriniz Sürətlə Dolsun!',
-        coverBlobName: 'tamdad sosis_20260116_071947_f7f760bc.png',
-        mainBlobName:
-          'https://obafiles.blob.core.windows.net/oba-plus/tamdad sosis_20260116_072000_4e882210.png',
-        link: 'https://oba.az/site/assets/files/3186/endirim-jurnali.pdf',
-        isSeen: false,
-        seenAt: null,
-      },
-    ],
-  },
-];
+// Mock data for demonstration purposes
+[];
 
 const DUMMY_USERS: StoryUser[] = [
   {
@@ -52,7 +15,7 @@ const DUMMY_USERS: StoryUser[] = [
       {
         id: 'as23231cd',
         type: 'image',
-        url: 'https://obafiles.blob.core.windows.net/oba-plus/nescafe_20260116_060935_90efac42.png',
+        url: 'https://picsum.photos/1080/1920?random=1',
         duration: 15000,
         test: 'Custom test property', // Example custom property
         customData: { foo: 'bar', value: 123 }, // Example nested custom data
@@ -60,14 +23,14 @@ const DUMMY_USERS: StoryUser[] = [
       {
         id: 'as23231cd12',
         type: 'image',
-        url: 'https://obafiles.blob.core.windows.net/oba-plus/ariel 23_20260115_072209_ac9d19c3.png',
+        url: 'https://picsum.photos/1080/1920?random=2',
         duration: 15000,
         test: 'Another test value',
       },
       {
         id: 'as23231cd2',
         type: 'image',
-        url: 'https://obafiles.blob.core.windows.net/oba-plus/tamdad sosis_20260116_072000_4e882210.png',
+        url: 'https://picsum.photos/1080/1920?random=3',
         duration: 15000,
       },
     ],

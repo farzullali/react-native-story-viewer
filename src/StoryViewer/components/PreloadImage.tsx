@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
 
 interface PreloadImageProps {
@@ -20,37 +20,52 @@ export default function PreloadImage({
 }: PreloadImageProps) {
   const [prefetched, setPrefetched] = useState(false);
   const [imageRendered, setImageRendered] = useState(false);
+  const isMountedRef = useRef(true);
+  const onLoadingChangeRef = useRef(onLoadingChange);
+
+  // Update the ref whenever onLoadingChange changes
+  useEffect(() => {
+    onLoadingChangeRef.current = onLoadingChange;
+  }, [onLoadingChange]);
 
   useEffect(() => {
-    let isMounted = true;
+    isMountedRef.current = true;
 
-    // Notify parent that loading has started
-    onLoadingChange?.(true);
+    // Reset states first
     setPrefetched(false);
     setImageRendered(false);
 
+    // Notify parent that loading has started
+    onLoadingChangeRef.current?.(true);
+
     Image.prefetch(source.uri)
       .then(() => {
-        if (isMounted) {
+        if (isMountedRef.current) {
           setPrefetched(true);
-          // Don't notify parent yet - wait for actual render
+          setImageRendered(true);
+          onLoadingChangeRef.current?.(false);
         }
       })
       .catch(() => {
-        if (isMounted) {
+        // On error, still mark as complete to prevent infinite loading
+        if (isMountedRef.current) {
           setPrefetched(true);
-          // On error, still try to show the image
+          setImageRendered(true);
+          onLoadingChangeRef.current?.(false);
         }
       });
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
     };
-  }, [source.uri, onLoadingChange]);
+  }, [source.uri]);
 
+  // Handle Image.onLoad callback (for non-cached images)
   const handleImageLoad = () => {
-    setImageRendered(true);
-    onLoadingChange?.(false);
+    if (isMountedRef.current && !imageRendered) {
+      setImageRendered(true);
+      // No need to call onLoadingChange(false) here as it's already called in prefetch
+    }
   };
 
   return (

@@ -31,7 +31,6 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
   renderContent,
   renderFooter,
   renderItem,
-  renderLoader,
   containerStyle,
   progressContainerStyle,
   headerContainerStyle,
@@ -102,21 +101,21 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
     if (visible && currentStory) {
       reset();
       setIsPaused(false);
-      setIsImageLoading(true); // Reset loading state for new story
+      // Don't set isImageLoading here - let PreloadImage control it entirely
       onStoryView?.(currentUser.id, currentStory.id);
     } else {
       setIsPaused(true);
       setIsImageLoading(true);
       reset();
     }
-  }, [currentStory?.id, visible]);
+  }, [currentStory?.id, currentUserIndex, visible]);
 
   // Pause/resume handlers for tap
   const handlePressIn = useCallback(() => setIsPaused(true), []);
   const handlePressOut = useCallback(() => setIsPaused(false), []);
 
-  // Image loading handler
-  const handleImageLoadingChange = useCallback((loading: boolean) => {
+  // Image loading handler - using ref to maintain stable callback reference
+  const handleImageLoadingChange = React.useCallback((loading: boolean) => {
     setIsImageLoading(loading);
   }, []);
 
@@ -125,6 +124,10 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
     ({ item: user, index }: { item: StoryUser; index: number }) => {
       const isCurrentUser = index === currentUserIndex;
       const story = user.stories[isCurrentUser ? currentStoryIndex : 0];
+
+      const imageLoadingCallback = isCurrentUser
+        ? handleImageLoadingChange
+        : () => {}; // Always a function, never undefined
 
       if (!story) return null;
 
@@ -179,7 +182,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
                   onPressIn={handlePressIn}
                   onPressOut={handlePressOut}
                   imageAspectRatio={imageAspectRatio}
-                  onImageLoadingChange={isCurrentUser ? handleImageLoadingChange : undefined}
+                  onImageLoadingChange={imageLoadingCallback}
                 />
               )}
 
@@ -220,6 +223,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
       renderProgress,
       renderContent,
       renderFooter,
+      handleImageLoadingChange,
       progressContainerStyle,
       headerContainerStyle,
       footerContainerStyle,
